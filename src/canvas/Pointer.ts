@@ -1,9 +1,11 @@
 import * as PIXI from "pixi.js";
 export default class Pointer extends PIXI.Graphics{
-    isMouseDown = false;
+    dragging:boolean = false;
     data:PIXI.InteractionData;
     dragEvent:Function;
-    constructor(x:number, y:number, radius:number, onDrag?:Function){
+    dragAble:boolean = false;
+    onMove:(position:IPosition, context:any)=> void;
+    constructor(x:number, y:number, radius:number){
         super();
         this.beginFill(0x000000);// 黑色的点
         this.lineStyle(0);
@@ -11,38 +13,35 @@ export default class Pointer extends PIXI.Graphics{
         this.endFill();
         this.x = x;
         this.y = y;
-        // if(onDrag){
-        //     console.log('in drag',onDrag);
-        //     p.interactive = true;
-        //     p.on('mousemove', this._onDrag.bind(this));
-        //     p.on('mousedown', this.onMouseDown.bind(this));
-        //     p.on('mouseup', this.onMouseUp.bind(this));
-        // }
-        this.dragEvent = onDrag;
+        this.interactive = true;
+        this.buttonMode = true;
+        this.on('pointerdown', this.onDragStart)
+        .on('pointerup', this.onDragEnd)
+        .on('pointerupoutside', this.onDragEnd)
+        .on('pointermove', this.onDragMove);
     }
-    // private _onDrag(){
-    //     const arr = [...arguments];
-    //     if(this.isMouseDown){
-    //         if(this.data){
-    //             const newPosition = this.data.getLocalPosition(this.pointer.parent);
-    //             this.pointer.x = newPosition.x;
-    //             this.pointer.y = newPosition.y;
-    //             this.dragEvent.call(this, newPosition, false);
-    //         }
-           
-    //     }
-    // }
-    onMouseDown(event:PIXI.InteractionEvent){
-        this.isMouseDown = true;
-        this.alpha = 0.5;
+    onDragStart(event:PIXI.InteractionEvent){
+        if(!this.dragAble) return;
         this.data = event.data;
+        this.alpha = 0.5;
+        this.dragging = true;
     }
-    onMouseUp(event:PIXI.InteractionEvent){
-        this.isMouseDown = false;
+    onDragEnd(){
+        if(!this.dragAble) return;
         this.alpha = 1;
-        if(this.data){
+        this.dragging = false;
+        // set the interaction data to null
+        this.data = null;
+    }
+    onDragMove(){
+        if (this.dragging && this.dragAble) {
             const newPosition = this.data.getLocalPosition(this.parent);
-            this.dragEvent.call(this, newPosition, true);
+            this.x = newPosition.x;
+            this.y = newPosition.y;
+            if(this.onMove){
+                this.onMove({x:this.x, y:this.y}, this);
+            }
         }
     }
+
 }

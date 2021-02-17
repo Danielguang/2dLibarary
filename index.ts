@@ -3,7 +3,7 @@ const el = document.getElementById("canvas");
 const canvas = new Canvas(el);
 function drawLine() {
     console.log('draw line');
-    canvas.drawLine(100,200, 630, 600);
+    canvas.drawLine();
     // canvas.drawLine(200,200, 500, 500);
 }
 function drawFloorPlan(){
@@ -19,7 +19,7 @@ function zoomOut(){
     canvas.zoomOut();
 }
 
-// document.getElementById('line-btn').onclick = drawLine;
+document.getElementById('line-btn').onclick = drawLine;
 document.getElementById('draw-btn').onclick = drawFloorPlan;
 document.getElementById('clear-btn').onclick = clear;
 document.getElementById('zoom-in').onclick = zoomIn;

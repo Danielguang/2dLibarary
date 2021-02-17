@@ -7,7 +7,6 @@ export default class Polygon  extends PIXI.Graphics{
     _positions:IPosition[];
     constructor(pointers:number[]){
         super();
-        // const polygon = new PIXI.Graphics();
         this.beginFill(0x66FF33);
         this.drawPolygon(pointers);
         this.endFill();

@@ -1,13 +1,6 @@
 import { Container } from "pixi.js";
 import * as PIXI from "pixi.js";
 let Graphics = PIXI.Graphics;
-
-
-interface Position {
-    x:number,
-    y
-    :number
-}
 const LINE_INDEX = 0;
 const POINT_INDEX = 1;
 const TEXT_INDEX  = 2;
@@ -22,7 +15,6 @@ export default class Line extends PIXI.Graphics {
     text:PIXI.Text;
     constructor(xStart = 0, yStart = 0, xEnd: number, yEnd: number, width = 10){
         super();
-  
         this.lineStyle(width,LINE_BACKGROUND,1);
         this.moveTo(xStart, yStart);
         this.lineTo(xEnd, yEnd);
@@ -51,52 +43,6 @@ export default class Line extends PIXI.Graphics {
         this.text.zIndex = TEXT_INDEX;
         return c
     }
-    // _line(xStart = 0, yStart = 0, xEnd: number, yEnd: number, width = 10, pointer = true, background=0xe5e8ea){
-    //     let line = new Graphics();
-    //     line.moveTo(xStart, yStart);
-    //     line.lineStyle(width,background);
-    //     line.lineTo(xEnd, yEnd);
-    //     line.moveTo(xStart, yStart);
-    //     line.lineStyle(width,background);
-    //     line.lineTo(xEnd, yEnd);
-    //     this.lineContainer.addChildAt(line, LINE_INDEX);
-    //     if(pointer){
-    //         let sPointer = new Pointer(xStart, yStart,width /2,this.onDragStartPointer.bind(this));
-    //         this.lineContainer.addChildAt(sPointer.pointer, POINT_INDEX);
-    //         let ePointer = new Pointer(xEnd, yEnd,width /2, this.onDragEndPointer.bind(this));
-    //         this.lineContainer.addChildAt(ePointer.pointer,POINT_INDEX );
-    //     }
-
-    //     return line;
-    // }
-    // onDragEndPointer(position:Position, isEnd:Boolean){
-    //     console.log(isEnd);
-    //     if(isEnd){
-    //         this._ex = position.x;
-    //         this._ey = position.y;
-    //     }
-    //     this.line.clear();
-    //     this.line.moveTo(this._sx, this._sy);
-    //     this.line.lineStyle(10,0xe5e8ea);
-    //     this.line.lineTo(position.x, position.y);
-    //     this.lineContainer.addChildAt(this.line,0);
-    //     this.computeLength(this._sx, this._sy, position.x, position.y);
-
-    //   }
-    // onDragStartPointer(position:Position,isEnd:Boolean){
-    //     if(isEnd){
-    //         this._sx = position.x;
-    //         this._sy = position.y;
-    //     }
-    //     this.line.clear();
-    //     this.line.moveTo(position.x, position.y);
-    //     this.line.lineStyle(10,0xe5e8ea);
-    //     this.line.lineTo(this._ex, this._ey);
-    //     this.line.zIndex =1;
-    //     this.lineContainer.addChildAt(this.line, 0);
-    //     this.computeLength(position.x, position.y, this._ex, this._ey);
-       
-    // }
     updatePointers({x1, y1},{x2, y2}){
         this._updateStartAneEndPointer(x1,y1,x2,y2);
         this.clear();
