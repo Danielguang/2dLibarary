@@ -151,17 +151,17 @@ export const getClosePolygon = (lines?: lineRef[])=>{
     const visited = new Set();
     // 回溯算法
     const backTrack = (path, current:lineRef, start:lineRef,step =1, visited) =>{
-        const _next = mock.filter(item => item.sp.x === current.ep.x && item.sp.y === current.ep.y && !visited.has(item));
-        if(current === start && step !=1){
-            res.push(path);
+        const _next = mock.filter((item) => getLinkLine(current, item) && !visited.has(item));
+        console.log(_next);
+      
+        if(_next.length === 0) {
+            const {x, y } = start.sp;
+            if(current.ep.x === x && current.ep.y === y || current.sp.x ===x && current.sp.y === y){
+                res.push(path);
+            }
             return;
-        }
-        if(_next.length === 0) return;
-       
-        if(step != 1){
-            visited.add(current);
-        }
-       
+        };
+        visited.add(current);
         step = step +1;
         for(let i =0; i< _next.length; i++){
             const n = _next[i];
@@ -169,10 +169,11 @@ export const getClosePolygon = (lines?: lineRef[])=>{
             backTrack(path.concat(n), n, start,step,visited); 
         }   
     }
-    for(let i = 0; i<mock.length; i++){
-        visited.clear();
-        backTrack([], mock[i],mock[i], 1,visited);
-    }
+    // for(let i = 0; i<mock.length; i++){
+    //     visited.clear();
+    //     backTrack([], mock[i],mock[i], 1,visited);
+    // }
+    backTrack([].concat(mock[0]), mock[0],mock[0], 1,visited);
     console.log(res);
     // console.log(sameOrContainerArea(res[0], res[5]));
     // const clone = cloneDeep(res);
@@ -198,6 +199,22 @@ export const getClosePolygon = (lines?: lineRef[])=>{
     // console.log(res);
   
     
+}
+const getLinkLine = (a:lineRef, b:lineRef):boolean => {
+    if(a === b) return false;
+    // 头部相连
+    if(a.sp.x === b.sp.x && a.sp.y === b.sp.y) return true;
+    
+    // 尾部相连
+    if(a.ep.x === b.ep.x && a.ep.y === b.ep.y) return true;
+    
+    // 头尾相连
+     if(a.sp.x === b.ep.x && a.sp.y === b.ep.y) return true;
+     
+     // 尾头相连
+     if(a.ep.x === b.sp.x && a.ep.y === b.sp.y) return true;
+
+     return false;
 }
 const sameOrContainerArea = (a:lineRef[], b:lineRef[]) => {
     let flag = true;
