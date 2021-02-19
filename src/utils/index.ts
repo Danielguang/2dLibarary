@@ -1,8 +1,4 @@
-interface line {
-    sp:IPosition,
-    ep:IPosition,
-    next:line[]
-}
+
 export const intersection = (start1:number, end1:number, start2:number, end2:number, k = 0) => {
     if (k === 0) {
         if (start2[0] - end2[0] === 0 || start2[1] - end2[1] === 0)
@@ -71,128 +67,162 @@ export const intersection = (start1:number, end1:number, start2:number, end2:num
         return []
     }
 };
-import {cloneDeep } from 'lodash';
+import {cloneDeep, uniqWith, isEqual, difference, remove, pullAt } from 'lodash';
 
 const mock = [
     {
         "sp": {
-          "x": 333,
-          "y": 312
+          "x": 10,
+          "y": 10
         },
         "ep": {
-          "x": 361,
-          "y": 362
-        },
-        "next": []
-      },
-    {
-      "sp": {
-        "x": 109,
-        "y": 237
-      },
-      "ep": {
-        "x": 302,
-        "y": 236
-      },
-      "next": []
-    },
-    {
-      "sp": {
-        "x": 295,
-        "y": 60
-      },
-      "ep": {
-        "x": 111,
-        "y": 75
-      },
-      "next": []
-    },
-    {
-      "sp": {
-        "x": 302,
-        "y": 236
-      },
-      "ep": {
-        "x": 333,
-        "y": 312
-      },
-
-    },
-    {
-      "sp": {
-        "x": 333,
-        "y": 312
-      },
-      "ep": {
-        "x": 128,
-        "y": 341
-      }
-    },
-    {
-        "sp": {
-          "x": 302,
-          "y": 236
-        },
-        "ep": {
-          "x": 295,
-          "y": 60
-        },
-        "next": []
-      },
-    {
-        "sp": {
-          "x": 128,
-          "y": 341
-        },
-        "ep": {
-          "x": 109,
-          "y": 237
+          "x": 20,
+          "y": 10
         }
       },
       {
         "sp": {
-          "x": 111,
-          "y": 75
+          "x": 20,
+          "y": 10
         },
         "ep": {
-          "x": 109,
-          "y": 237
+          "x": 30,
+          "y": 10
+        }
+      },
+      {
+        "sp": {
+          "x": 20,
+          "y": 10
         },
-        "next": []
+        "ep": {
+          "x": 20,
+          "y": 20
+        }
+      },
+      {
+        "sp": {
+          "x": 30,
+          "y": 10
+        },
+        "ep": {
+          "x": 30,
+          "y": 20
+        }
+      },
+      {
+        "sp": {
+          "x": 20,
+          "y": 20
+        },
+        "ep": {
+          "x": 30,
+          "y": 20
+        }
+      },
+      {
+        "sp": {
+          "x": 10,
+          "y": 20
+        },
+        "ep": {
+          "x": 20,
+          "y": 20
+        }
+      },
+      {
+        "sp": {
+          "x": 10,
+          "y": 10
+        },
+        "ep": {
+          "x": 10,
+          "y": 20
+        }
       }
-  ] as line[];
-export const getClosePolygon = ()=>{
-    console.log(mock);
-    const clone = cloneDeep(mock)
-    // 回溯算法
-    const res = new Set();
+  ] as lineRef[];
+// 1. 首先根据每一个点直接遍历所有图形可形成闭合区域的
+// 2. 每个点依次遍历
+// 3. 去除重复的
+// 4. 去除包含的
+export const getClosePolygon = (lines?: lineRef[])=>{
+    const res = [] as lineRef[][];
+    const result = []
     const visited = new Set();
-    const leftLine = [];
-    const backTrack = (path, current:line, start:line,stop = false) =>{
-        if(stop) return;
-        visited.add(current);
-        const _next = clone.filter(item => item.ep.x === current.sp.x && item.ep.y === current.sp.y && !visited.has(item));
-        console.log('_next', _next);
-        // debugger;
+    // 回溯算法
+    const backTrack = (path, current:lineRef, start:lineRef,step =1, visited) =>{
+        const _next = mock.filter(item => item.sp.x === current.ep.x && item.sp.y === current.ep.y && !visited.has(item));
+        if(current === start && step !=1){
+            res.push(path);
+            return;
+        }
         if(_next.length === 0) return;
-        if(_next.length >= 2) leftLine.push(current)
+       
+        if(step != 1){
+            visited.add(current);
+        }
+       
+        step = step +1;
         for(let i =0; i< _next.length; i++){
             const n = _next[i];
-            // 4个坐标相等，回到原点，结束
-            if(n.sp.x === start.sp.x && n.sp.x === start.sp.x && n.sp.y === start.sp.y && n.sp.x === start.sp.x){
-                res.add(path);
-                backTrack(path.concat(n),n,start,true)
-            } else {
-                backTrack(path.concat(n),n,start,false)
-            }
-            
+            // path.push([{x:n.sp.x, y:n.sp.y},{ x:n.ep.x, y:n.ep.y }]);
+            backTrack(path.concat(n), n, start,step,visited); 
         }   
     }
-    for(let i =0; i< mock.length; i++){
-        const n = mock[i];
-        const start = clone[i];
-        backTrack([].concat(start), n, start)
+    for(let i = 0; i<mock.length; i++){
+        visited.clear();
+        backTrack([], mock[i],mock[i], 1,visited);
     }
-    console.log(res, leftLine);
+    console.log(res);
+    // console.log(sameOrContainerArea(res[0], res[5]));
+    // const clone = cloneDeep(res);
+    // const deleteIndex =[];
+    // const arr = [];
+    // for(let i =0; i < res.length; i++){
+    //     const area = res[i];
+    //     if(deleteIndex.includes(i)) break;
+    //     for(let n = i+1; n < res.length; n++){
+    //         const next = res[n]
+    //         const result  = sameOrContainerArea(area, res[n]);
+    //         if(result.flag){
+    //             if(result.toAdd === next){
+    //                 deleteIndex.push(n)
+    //             }else {
+    //                 deleteIndex.push(i);
+    //             }
+    //         }
+    //     }
+    // }
+    // console.log(deleteIndex);
+    // pullAt(res, deleteIndex);
+    // console.log(res);
+  
+    
 }
-getClosePolygon();
+const sameOrContainerArea = (a:lineRef[], b:lineRef[]) => {
+    let flag = true;
+    let compare:lineRef[], target:lineRef[];
+    if(a.length <= b.length){
+      compare = a;
+      target = b;
+    } else {
+        compare = b;
+        target = a;
+    }
+    compare.forEach(al =>{
+        const l = target.findIndex(bl => {
+            return sameLine(al,bl);
+        })
+        if(l === -1){
+          flag = false;  
+        }
+    })
+    return {
+        flag,
+        toAdd:compare,
+        toDelete:target,
+    };
+}
+const sameLine = ( a:lineRef, b:lineRef)=>{
+    return a.sp.x === b.sp.x && a.sp.y === b.sp.y && a.ep.x === b.ep.x && a.ep.y === b.ep.y;
+}

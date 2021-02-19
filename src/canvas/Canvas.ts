@@ -268,18 +268,6 @@ export default class Canvas {
         this.endingPointer.clear();
         pointer.closed = true;
         this.line.ePointer = pointer.pointer;
-        const lines = this.lines.filter(el => el.sPointer === pointer.pointer);
-        this.line.next = lines;
-        // 当离散的点都闭合了，默认为闭合的多边形，填充内部图形
-        if(this.stackPointer.filter(el => !el.closed).length === 0 && this.stackPointer.length >=3){
-          const pointers = this.stackPointer.reduce((accumulator,cur)=>{
-            accumulator.push(cur.pointer.x);
-            accumulator.push(cur.pointer.y);
-          return accumulator;
-          },[] as number[]);
-          const polygon = this.drawPolygon(pointers);
-          this.mode = "DRAG";
-        }  
       } else {
         this.endingPointer.alpha =1;
         this.endingPointer.buttonMode = true;
@@ -299,38 +287,21 @@ export default class Canvas {
       this.endingPointer = null;
       this.stage.sortChildren();
       this.lines.push(this.line);
-      console.log("lines", this.lines);
-      // const testLine = this.lines.map(el=>{
-      //   const arr = this.lines.filter(item => { return item.sPointer === el.ePointer})
-      //   console.log('arr', arr);
-        
-      //   el.next = arr;
-      //   const next = arr.map(el=>{
-      //     return {
-      //       sp:{
-      //         x:el.sPointer.x,
-      //         y:el.sPointer.y
-      //       },
-      //       ep:{
-      //         x:el.ePointer.x,
-      //         y:el.ePointer.y
-      //       }
-      //     }
+      const arr = getClosePolygon(this._getLineRef());
+      console.log(this._getLineRef());
+      // if(arr.length>0){
+      //   arr.forEach(el => {
+      //     const number = el.reduce((pre:number[],cur)=>{
+      //       pre.push(cur.sp.x);
+      //       pre.push(cur.sp.y);
+      //       pre.push(cur.ep.x);
+      //       pre.push(cur.ep.y);
+      //       return pre;
+      //    },[] as number[]);
+      //    this.drawPolygon(number);
       //   })
-      //   const a = {
-      //     sp:{
-      //       x:el.sPointer.x,
-      //       y:el.sPointer.y
-      //     },
-      //     ep:{
-      //       x:el.ePointer.x,
-      //       y:el.ePointer.y
-      //     },
-      //     next
-      //   }
-      //   return a;
-      // })
-      // console.log("testLine", testLine);
+      // }
+      
       this.line = {} as ILine;
     }
       this.isDown = false;
@@ -375,31 +346,6 @@ export default class Canvas {
       this.crossLine.lineY.clear();
     }
   }
-  // _hitAreas({x,y}){
-  //   const lines = [] as ILine[];
-  //   let hitGraphics =  {} as PIXI.Graphics;
-  //   this.lines.forEach(el => {
-  //     if(this._detectHit(el.ePointer.getBounds(),x,y)){
-  //       hitGraphics = el.ePointer;
-  //       lines.push(el);
-  //       return;
-  //     }
-  //     if(this._detectHit(el.sPointer.getBounds(),x,y)){
-  //       hitGraphics = el.sPointer;
-  //       lines.push(el);
-  //       return;
-  //     }
-  //   });
-  //   if(this.lines.length ===0){
-  //     return false;
-  //   }
-  //   const area = this.areas.filter(el => el.pointers.includes( hitGraphics));
-  //   return {
-  //     lines:lines,
-  //     hitOnPointer:hitGraphics,
-  //     area,
-  //   };
-  // }
   _detectHit(rec:PIXI.Rectangle, x:number, y:number ){
     if(x>=rec.x && x<= rec.x + rec.width && y>=rec.y && y<= rec.y + rec.height){
       return true;
@@ -425,5 +371,20 @@ export default class Canvas {
     const x = (event.pageX - this.view.offsetLeft)/this.scale.x;
     const y = (event.pageY - this.view.offsetTop)/this.scale.y;
     return {x, y};
+  }
+  _getLineRef():lineRef[] {
+    return this.lines.map(el=>{
+      const a = {
+        sp:{
+          x:el.sPointer.x,
+          y:el.sPointer.y
+        },
+        ep:{
+          x:el.ePointer.x,
+          y:el.ePointer.y
+        }
+      }
+      return a;
+    })
   }
 }
