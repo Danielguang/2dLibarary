@@ -3,11 +3,13 @@ declare interface IPosition{
     x:number,
     y:number
 }
-
-declare interface ILine {
-    line:Line;
-    sPointer: Point; // 初始位置的;
-    ePointer: Point; // 结束位置;
+declare interface lineRef {
+    [index:number]:IPosition;
+    length:2
 }
-import Line from './canvas/Line';
+
+declare interface polygonRef {
+    [index:number]:lineRef[];
+}
+// import Line from './canvas/Line';
 // import Point from './canvas/Pointer';
