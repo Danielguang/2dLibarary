@@ -152,7 +152,6 @@ const checkDuplicate2 = (polygons:PointRef[][], p:PointRef[]) =>{
         };
     }
     return false;
-
 }
 const transformToPolygon = (path:number[], pointerRef:PointRef[]):PointRef[]=>{
     const pointers = [];
