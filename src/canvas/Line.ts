@@ -15,7 +15,7 @@ export default class Line extends PIXI.Graphics {
     text:PIXI.Text;
     constructor(xStart = 0, yStart = 0, xEnd: number, yEnd: number, width = 10){
         super();
-        this.lineStyle(width,LINE_BACKGROUND,1);
+        this.lineStyle(width,LINE_BACKGROUND,1, 1);
         this.moveTo(xStart, yStart);
         this.lineTo(xEnd, yEnd);
         this._sx = xStart;

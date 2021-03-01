@@ -81,7 +81,7 @@ export default class Canvas {
     this.app.view.addEventListener('mousedown', this.onMouseDown.bind(this))
     this.app.view.addEventListener('mousemove', this.onMouseMove.bind(this))
     this.app.view.addEventListener('mouseup',this.onMouseUp.bind(this));
-    getClosePolygon();
+    // getClosePolygon();
   }
   getApp() {
     return this.app;
@@ -104,6 +104,21 @@ export default class Canvas {
   }
   get mode (){
     return this._mode;
+  }
+  get lineRefs() {
+    const lines = this.app.stage.children.filter(el => el instanceof Line) as Line[];
+    return lines.map(el => { 
+      return [
+        {
+          x:el._sx,
+          y:el._sy
+        },
+        {
+          x:el._ex,
+          y:el._ey
+        }
+      ]
+    }) as lineRef[];
   }
   set mode(param:CanvasMode) {
     console.log('mode change',param);
@@ -158,29 +173,20 @@ export default class Canvas {
     
   };
   _onDrawStart(x:number, y:number){
-    const pointer = this.hitPointerDetect({x , y});
-
+    const hitObj = this.hitDetect({x , y});
     this._lastX = x;
     this._lastY = y;
-    if(pointer){
-      pointer.closed = true;
-      this.line.sPointer = pointer.pointer;
-      const lines = this.lines.filter(el => el.ePointer === pointer.pointer);
-      this.line.next = lines;
-    } else {
+    if(hitObj.length === 0 ){
       const sPointer = new Pointer(x ,y ,5);
       sPointer.zIndex = 10;
-      //TODO  with dragging
-      console.log('onDraw');
       sPointer.onMove = this.dragPointer;
       this.stage.addChild(sPointer);
       this.points.push(sPointer);
-      this.stackPointer.push({
-        closed:false,
-        pointer:sPointer,
-      });
-      this.line.next = [];
-      this.line.sPointer = sPointer;
+    } else {
+      const points = this._getPointer(hitObj);
+      this._lastX = points[0].x;
+      this._lastY = points[0].y;
+      // console.log(points[0].x, points[0].y);
     }
   }
   dragPointer = (position:IPosition, context:Pointer) => {
@@ -228,6 +234,7 @@ export default class Canvas {
           this.endingPointer = new Pointer(x,y,5);
           this.endingPointer.alpha = 0.5;
           this.drawingLine.alpha = 0.5;
+          this.drawingLine.zIndex = 1;
           this.stage.addChild(this.drawingLine);
           this.stage.addChild(this.endingPointer);
           this.stage.addChild(this.drawingLine.txt);
@@ -235,14 +242,15 @@ export default class Canvas {
         this.drawingLine.updatePointers({x1:this._lastX, y1:this._lastY}, {x2:x, y2:y});
         this.endingPointer.x = x;
         this.endingPointer.y = y;
-       
-        const pointer = this.hitPointerDetect({x, y});
-        if(pointer){
-          this.drawCrossLine(pointer.pointer.x, pointer.pointer.y+5);
-        } else {
-          this.clearCrossLine();
-        }
+        // const obj = this.hitDetect({x, y});
+        // const pointer = obj.find(el => el instanceof Pointer && el !== this.endingPointer) as Pointer;
+        // if(pointer){
+        //   this.drawCrossLine(pointer.x, pointer.y+5);
+        // } else {
+        //   this.clearCrossLine();
+        // }
       }
+
       this.stage.sortChildren();
     }
   }
@@ -262,47 +270,37 @@ export default class Canvas {
     this.isUp = true;
   }
   _onDrawEnd(x:number,y:number){
+    this.endingPointer.clear();
     if(this.isDown){
-      const pointer = this.hitPointerDetect({x, y});
-      if(pointer){
-        this.endingPointer.clear();
-        pointer.closed = true;
-        this.line.ePointer = pointer.pointer;
+      const obj = this.hitDetect({x, y});
+      const pointer = this._getPointer(obj);
+      console.log(pointer);
+      if(pointer.length >= 1){
+        const {_sx,_sy} = this.drawingLine;
+        console.log('last pointer', pointer[0].x, pointer[0].y);
+        this.drawingLine.updatePointers({x1:_sx, y1:_sy},{ x2:pointer[0].x, y2:pointer[0].y} );
+        console.log('开始考虑多边形');
+        const polygon = getClosePolygon(this.lineRefs);
+        console.log(polygon);
+        // polygon.forEach((el)=> {
+        //   const polygon = new Polygon(el);
+        //   polygon.zIndex = 0;
+        //   this.stage.addChild(polygon);
+        // })
+        // const lineRef = this.lineRefs;
+        // console.log(lineRef);
       } else {
+        this.endingPointer.rePaint();
         this.endingPointer.alpha =1;
         this.endingPointer.buttonMode = true;
         this.endingPointer.interactive = true;
         this.endingPointer.onMove = this.dragPointer;
-        // this.endingPointer.on('pointerdown',this.dragPointer);
-        this.points.push(this.endingPointer);
-        this.stackPointer.push({
-          closed:false,
-          pointer:this.endingPointer,
-        });
         this.endingPointer.zIndex =2;
-        this.line.ePointer = this.endingPointer;
       }
-      this.line.line = this.drawingLine;
+      this.drawingLine.alpha =1;
       this.drawingLine = null as Line;
       this.endingPointer = null;
       this.stage.sortChildren();
-      this.lines.push(this.line);
-      const arr = getClosePolygon(this._getLineRef());
-      console.log(this._getLineRef());
-      // if(arr.length>0){
-      //   arr.forEach(el => {
-      //     const number = el.reduce((pre:number[],cur)=>{
-      //       pre.push(cur.sp.x);
-      //       pre.push(cur.sp.y);
-      //       pre.push(cur.ep.x);
-      //       pre.push(cur.ep.y);
-      //       return pre;
-      //    },[] as number[]);
-      //    this.drawPolygon(number);
-      //   })
-      // }
-      
-      this.line = {} as ILine;
     }
       this.isDown = false;
       this.isUp = true;
@@ -311,16 +309,15 @@ export default class Canvas {
      this.mode= "DRAW";
      console.log(this.mode);
   }
-  hitPointerDetect({x, y}){
-    const pointer = this.stackPointer.find(el => {
-      const rec = el.pointer.getBounds();
+  hitDetect({x, y}):PIXI.DisplayObject[]{
+    const filter = this.app.stage.children.filter(el => {
+      const rec = el.getBounds();
       const _x = x * this.stage.scale.x;
       const _y = y * this.stage.scale.y;
       return this._detectHit(rec, _x , _y)
-     
     })
-    if(pointer) return pointer;
-    return false;
+    console.log(filter);
+    if(filter) return filter;
   }
   drawCrossLine(x:number,y:number){
     if(this.crossLine.lineX){
@@ -372,19 +369,10 @@ export default class Canvas {
     const y = (event.pageY - this.view.offsetTop)/this.scale.y;
     return {x, y};
   }
-  _getLineRef():lineRef[] {
-    return this.lines.map(el=>{
-      const a = {
-        sp:{
-          x:el.sPointer.x,
-          y:el.sPointer.y
-        },
-        ep:{
-          x:el.ePointer.x,
-          y:el.ePointer.y
-        }
-      }
-      return a;
-    })
+  _getPointer(obj:PIXI.DisplayObject[]):Pointer[]{
+    return obj.filter(el => el instanceof Pointer) as Pointer[];
   }
+  _getLineRef():lineRef[] {
+    return []
+  }  
 }

@@ -4,6 +4,7 @@ export default class Pointer extends PIXI.Graphics{
     data:PIXI.InteractionData;
     dragEvent:Function;
     dragAble:boolean = false;
+    radius:number;
     onMove:(position:IPosition, context:any)=> void;
     constructor(x:number, y:number, radius:number){
         super();
@@ -13,6 +14,7 @@ export default class Pointer extends PIXI.Graphics{
         this.endFill();
         this.x = x;
         this.y = y;
+        this.radius = radius;
         this.interactive = true;
         this.buttonMode = true;
         this.on('pointerdown', this.onDragStart)
@@ -42,6 +44,12 @@ export default class Pointer extends PIXI.Graphics{
                 this.onMove({x:this.x, y:this.y}, this);
             }
         }
+    }
+    rePaint(){
+        this.beginFill(0x000000);// 黑色的点
+        this.lineStyle(0);
+        this.drawCircle(0, 0, this.radius);
+        this.endFill();
     }
 
 }

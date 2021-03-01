@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "lib": ["ES2019","DOM"],
+        "importHelpers": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "target": "es5",
+        "module": "esNext",
+        "declaration": true,
+        "declarationDir": "lib",
+        "sourceMap": false,
+        "outDir": "lib",
+        "rootDirs": ["src", "test"],
+        "composite": true,
+        "removeComments": false,
+        "baseUrl": "./",
+        "forceConsistentCasingInFileNames": true,
+        "downlevelIteration": true
+    },
+    "include": ["src", "**/*.d.ts"],
+    "files": ["src/index.d.ts"],
+    "exclude": ["node_modules", "**/*.spec.ts"]
+}

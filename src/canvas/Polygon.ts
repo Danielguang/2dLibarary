@@ -5,14 +5,22 @@ interface IPosition {
 }
 export default class Polygon  extends PIXI.Graphics{
     _positions:IPosition[];
-    constructor(pointers:number[]){
+    constructor(positions:lineRef[]){
         super();
         this.beginFill(0x66FF33);
-        this.drawPolygon(pointers);
+        const _positions = positions.reduce((pre,cur)=>{
+            const p0 = cur[0];
+            const p1 = cur[1];
+            console.log(pre);
+            pre.push(p0.x, p0.y);
+            pre.push(p1.x, p1.y);
+            return pre;
+        }, [] as number[])
+        this.drawPolygon(_positions);
         this.endFill();
         this._positions = [];
-        this._transformToLocalPosition(pointers);
-        console.log(this._positions);
+        // this._transformToLocalPosition(positions);
+        // console.log(this._positions);
     }
     updatePolygon(pointers){
         this.clear();
@@ -21,17 +29,27 @@ export default class Polygon  extends PIXI.Graphics{
         this.endFill();
         this._transformToLocalPosition(pointers);
     }
-    _transformToLocalPosition(pointers:number[]){
+    _transformToLocalPosition(pointers:lineRef[]){
+        // for(let i = 0; i<pointers.length; i++){    
+        //     if(i%2 === 0){
+        //      const tmp = pointers.slice(i, i+2);
+        //      if(tmp.length === 2){
+        //         this._positions.push({
+        //             x:tmp[0],
+        //             y:tmp[1],
+        //         }) 
+        //      }   
+        //     }
+        // }
         for(let i = 0; i<pointers.length; i++){    
-            if(i%2 === 0){
-             const tmp = pointers.slice(i, i+2);
-             if(tmp.length === 2){
-                this._positions.push({
-                    x:tmp[0],
-                    y:tmp[1],
-                }) 
-             }   
-            }
+            this._positions.push({
+                x:pointers[i][0].x,
+                y:pointers[i][0].y
+            });
+            this._positions.push({
+                x:pointers[i][1].x,
+                y:pointers[i][1].y
+            });
         }
     }
     get size(){
