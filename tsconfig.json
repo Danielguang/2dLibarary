@@ -20,7 +20,7 @@
         "forceConsistentCasingInFileNames": true,
         "downlevelIteration": true
     },
-    "include": ["src", "**/*.d.ts"],
+    "include": ["src", "**/*.d.ts","**/*.json"],
     "files": ["src/index.d.ts"],
     "exclude": ["node_modules", "**/*.spec.ts"]
 }

@@ -1,5 +1,5 @@
 import { isEqual, uniq, uniqBy, uniqWith, cloneDeep, transform } from "lodash";
-import { Polygon } from "pixi.js";
+import Mock from './mock/mock.json';
 
 export const intersection = (start1:number, end1:number, start2:number, end2:number, k = 0) => {
     if (k === 0) {
@@ -92,13 +92,15 @@ const mock1 = [
 
 // 1. extract all the pointer from line, get DotRef
 
-export const getMultiPolygon = (lines:lineRef[]) =>{
-    const data = lines;
+export const getMultiPolygons = (lines:lineRef[]):IPosition[][] =>{
+    
+    const data = lines as lineRef[];
     // 低于两条线不用考虑
+    console.log('lines', data);
     if(data.length<3) return;
     // @ts-ignore
     let pointers = data.flat() as IPosition[];
-    const polygons = [] as PointRef[][];
+    const polygons = [] as IPosition[][];
     pointers = uniqWith(pointers,isEqual);
     // 初始化所有点
     const pointerRef = pointers.map(el=>{
@@ -120,22 +122,23 @@ export const getMultiPolygon = (lines:lineRef[]) =>{
         let currentLink = removeFromLink(links, sIndex, eIndex);
         const [s, u] = initTwoUnit(pointers, sIndex);
         // console.log(currentLink, sIndex, eIndex);
-        while(u.length){
+        // 
+        while(u.length || !s.includes(eIndex)){
             updatePointByRef(s,u, currentLink, pointers, cloneRef);
          }
          const p = cloneRef[eIndex];
-         p.path.unshift(sIndex);
          console.log(p.path);
          if(p.path.length >= 3){
-            const result = transformToPolygon(p.path, pointerRef);
-            if(!checkDuplicate2(polygons,result)){
+            const result = transformToPolygon(p.path, pointers);
+            if(!checkDuplicate2(polygons, result)){
                 polygons.push(result);
             }
          }
     }
-    console.log(polygons);    
+    console.log(polygons);
+    return polygons;
 }
-const checkDuplicate2 = (polygons:PointRef[][], p:PointRef[]) =>{
+const checkDuplicate2 = (polygons:IPosition[][], p:IPosition[]) =>{
     for(let i = 0; i< polygons.length; i++){
         let pointerFlag = true;
         for(let n =0; n< p.length; n++) {
@@ -153,7 +156,7 @@ const checkDuplicate2 = (polygons:PointRef[][], p:PointRef[]) =>{
     }
     return false;
 }
-const transformToPolygon = (path:number[], pointerRef:PointRef[]):PointRef[]=>{
+const transformToPolygon = (path:number[], pointerRef:IPosition[]):IPosition[]=>{
     const pointers = [];
     for(let i = 0; i< path.length; i++){
         pointers.push(pointerRef[path[i]])
@@ -207,10 +210,10 @@ const getPointerRefByLine =(pointers:IPosition[], lines:lineRef[])=>{
     return links;
 }
 // 更新相邻点的位置，且不在s集中
+// s 处理过的节点点
+// u 没有处理过的节点
 const updatePointByRef = (s:number[], u:number[], links:number[][], pointers:IPosition[],pointerRef:PointRef[] ) =>{
     const sIndex = s[s.length -1];
-    let minIndex = -1;
-    let lastLength = Infinity;
     const pre = pointerRef[sIndex];
     let preLength = pointerRef[sIndex].maxLength;
     for(let i =0; i< links[sIndex].length; i++){
@@ -228,39 +231,42 @@ const updatePointByRef = (s:number[], u:number[], links:number[][], pointers:IPo
             }
         ] as lineRef;
         const length = getLineLength(line);
-        if(pointerRef[p].maxLength === Infinity){
+        // 当第一个点的length 为空的时候
+        if(preLength === Infinity){
             pointerRef[p].maxLength =  length;
-            pointerRef[p].path =[...pre.path];
+            pointerRef[p].path = [sIndex];
             pointerRef[p].path.push(p);
+            continue;
         }
-        if(lastLength > length){
-            lastLength = length;
-            minIndex = p;
-        } 
         // 更新每一个点大于的情况
         if(pointerRef[p].maxLength > preLength + length){
-            pointerRef[p].path = [...pre.path];
+            pointerRef[p].path = [...pre.path];// 更新路径
             pointerRef[p].path.push(p);
+            console.log('更新路径');
             pointerRef[p].maxLength = preLength + length;
         }
     }
-    // 当循环完成后，将最小的点取出，放入s中
-    if(minIndex !== -1){
-        s.push(minIndex);
-        const index = u.findIndex((el,index) => el === minIndex);
-        u.splice(index,1);
-    } else {
-        // 如果没有，则没有经过遍历。直接拿出下一个再进行比较
-        const p = u.shift();
-        s.push(p);
+    // 找到现在最小的点
+    let min = -1;
+    let minLength = Infinity;
+    for(let i = 0; i< pointerRef.length; i++){
+        if(s.includes(i)) continue;
+        if(pointerRef[i].maxLength < minLength){
+            min = i;
+            minLength = pointerRef[i].maxLength;
+        }
     }
+    s.push(min);
+    const index = u.findIndex(el => el === min);
+    u.splice(index,1);
+    // 当循环完成后，将最小的点取出，放入s中
 }
 
 // 1. 首先根据每一个点直接遍历所有图形可形成闭合区域的
 // 2. 每个点依次遍历 done
 // 3. 去除包含的
 export const getClosePolygon = (lines?: lineRef[])=>{
-    getMultiPolygon(lines);
+    const s = getMultiPolygons(lines);
     return;
     const res = [] as lineRef[][];
     const visited = new Set();

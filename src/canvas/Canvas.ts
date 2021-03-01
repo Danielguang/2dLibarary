@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import Line from './Line';
 import Pointer from "./Pointer";
 import Polygon from "./Polygon";
-import { getClosePolygon } from './../utils/index';
+import { getClosePolygon, getMultiPolygons } from './../utils/index';
 let TextureCache = PIXI.utils.TextureCache
 let Sprite = PIXI.Sprite;
 let Graphics = PIXI.Graphics;
@@ -81,7 +81,7 @@ export default class Canvas {
     this.app.view.addEventListener('mousedown', this.onMouseDown.bind(this))
     this.app.view.addEventListener('mousemove', this.onMouseMove.bind(this))
     this.app.view.addEventListener('mouseup',this.onMouseUp.bind(this));
-    // getClosePolygon();
+    getMultiPolygons([]);
   }
   getApp() {
     return this.app;
@@ -280,13 +280,13 @@ export default class Canvas {
         console.log('last pointer', pointer[0].x, pointer[0].y);
         this.drawingLine.updatePointers({x1:_sx, y1:_sy},{ x2:pointer[0].x, y2:pointer[0].y} );
         console.log('开始考虑多边形');
-        const polygon = getClosePolygon(this.lineRefs);
-        console.log(polygon);
-        // polygon.forEach((el)=> {
-        //   const polygon = new Polygon(el);
-        //   polygon.zIndex = 0;
-        //   this.stage.addChild(polygon);
-        // })
+        const polygon = getMultiPolygons(this.lineRefs);
+        // console.log(polygon);
+        polygon.forEach((el)=> {
+          const polygon = new Polygon(el);
+          polygon.zIndex = 0;
+          this.stage.addChild(polygon);
+        })
         // const lineRef = this.lineRefs;
         // console.log(lineRef);
       } else {

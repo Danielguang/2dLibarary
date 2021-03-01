@@ -4,31 +4,40 @@ interface IPosition {
     y:number
 }
 export default class Polygon  extends PIXI.Graphics{
-    _positions:IPosition[];
-    constructor(positions:lineRef[]){
+    positions:IPosition[];
+    constructor(positions: IPosition[]){
         super();
-        this.beginFill(0x66FF33);
-        const _positions = positions.reduce((pre,cur)=>{
-            const p0 = cur[0];
-            const p1 = cur[1];
-            console.log(pre);
-            pre.push(p0.x, p0.y);
-            pre.push(p1.x, p1.y);
-            return pre;
-        }, [] as number[])
-        this.drawPolygon(_positions);
+        const color = Number(this.getRandomColor());
+        console.log(color);
+        this.beginFill(color);
+        const _position = [] as PIXI.Point[];
+        for(let i =0;i< positions.length; i++){
+            const p = positions[i];
+            const pointer = new PIXI.Point(p.x, p.y);
+            _position.push(pointer);
+        }
+        this.drawPolygon(_position);
         this.endFill();
-        this._positions = [];
+        this.positions = positions;
         // this._transformToLocalPosition(positions);
         // console.log(this._positions);
     }
     updatePolygon(pointers){
         this.clear();
+
         this.beginFill(0x66FF33);
         this.drawPolygon(pointers);
         this.endFill();
         this._transformToLocalPosition(pointers);
     }
+    getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        let color ='';
+        for (var i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return `0x${color}`;
+      }
     _transformToLocalPosition(pointers:lineRef[]){
         // for(let i = 0; i<pointers.length; i++){    
         //     if(i%2 === 0){
@@ -42,21 +51,21 @@ export default class Polygon  extends PIXI.Graphics{
         //     }
         // }
         for(let i = 0; i<pointers.length; i++){    
-            this._positions.push({
+            this.positions.push({
                 x:pointers[i][0].x,
                 y:pointers[i][0].y
             });
-            this._positions.push({
+            this.positions.push({
                 x:pointers[i][1].x,
                 y:pointers[i][1].y
             });
         }
     }
     get size(){
-        const len = this._positions.length;
-        let s = this._positions[0].y * (this._positions[len-1].x - this._positions[1].x);
+        const len = this.positions.length;
+        let s = this.positions[0].y * (this.positions[len-1].x - this._positions[1].x);
         for(let i = 1; i< len; ++i){
-            s += this._positions[i].y * (this._positions[i-1].x - this._positions[(i+1)%len].x);
+            s += this.positions[i].y * (this.positions[i-1].x - this._positions[(i+1)%len].x);
         }
         return Math.abs(s/2);
     }
@@ -64,11 +73,11 @@ export default class Polygon  extends PIXI.Graphics{
     get centerPosition(){
         let x = 0;
         let y = 0;
-      for (var i = 1; i <= this._positions.length; i++) {
-        const lat = this._positions[i % this._positions.length].x;
-        const lng = this._positions[i % this._positions.length].y;
-        const nextLat = this._positions[i - 1].x;
-        const nextLng = this._positions[i - 1].y;
+      for (var i = 1; i <= this.positions.length; i++) {
+        const lat = this.positions[i % this.positions.length].x;
+        const lng = this.positions[i % this.positions.length].y;
+        const nextLat = this.positions[i - 1].x;
+        const nextLng = this.positions[i - 1].y;
         const temp = (lat * nextLng - lng * nextLat) / 2;
         x += (temp * (lat + nextLat)) / 3;
         y += (temp * (lng + nextLng)) / 3;
