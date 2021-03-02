@@ -135,7 +135,6 @@ export const getMultiPolygons = (lines:lineRef[]):IPosition[][] =>{
             }
          }
     }
-    console.log(polygons);
     return polygons;
 }
 const checkDuplicate2 = (polygons:IPosition[][], p:IPosition[]) =>{
